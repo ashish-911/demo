@@ -1,15 +1,13 @@
-import { Pressable, StyleSheet, View } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { Pressable, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-function IconButton({ icon, size, color, onPress }) {
+function IconButton({ icon, color, size, onPress }) {
   return (
     <Pressable
+      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       onPress={onPress}
-      style={({ pressed }) => pressed && styles.pressed}
     >
-      <View style={styles.buttonContainer}>
-        <FontAwesomeIcon icon={icon} size={size} color={color} />
-      </View>
+      <Ionicons name={icon} color={color} size={size} />
     </Pressable>
   );
 }
@@ -17,13 +15,11 @@ function IconButton({ icon, size, color, onPress }) {
 export default IconButton;
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    borderRadius: 24,
-    padding: 6,
-    marginHorizontal: 8,
-    marginVertical: 2
+  button: {
+    margin: 8,
+    borderRadius: 20,
   },
   pressed: {
-    opacity: 0.75,
+    opacity: 0.7,
   },
 });

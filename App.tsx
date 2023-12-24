@@ -1,92 +1,109 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import ManageExpense from './screens/ManageExpense';
-import RecentExpenses from './screens/RecentExpenses';
-import AllExpenses from './screens/AllExpenses';
-import { GlobalStyles } from './constants/styles';
-import IconButton from './components/UI/IconButton';
-import ExpensesContextProvider from './store/expenses-context';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faHourglass, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { faCalendar } from '@fortawesome/free-solid-svg-icons';
+import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
+import WelcomeScreen from './screens/WelcomeScreen';
+import { Colors } from './constants/styles';
+import { Provider } from 'react-redux'
+import ReduxStore from './store/ReduxStore';
+import { useDispatch, useSelector } from 'react-redux'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { Pressable } from 'react-native';
+import { authenicate, logout } from './store/credentialSlice';
+import { useEffect, useState } from 'react';
+import LoadingOverlay from './components/ui/LoadingOverlay';
+// import { AsyncStorage } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createNativeStackNavigator();
-const BottomTabs = createBottomTabNavigator();
 
-function ExpensesOverview() {
+
+function AuthStack() {
   return (
-    <BottomTabs.Navigator
-      screenOptions={({ navigation }) => ({
-        headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: Colors.primary500 },
         headerTintColor: 'white',
-        tabBarStyle: { backgroundColor: GlobalStyles.colors.primary500 },
-        tabBarActiveTintColor: GlobalStyles.colors.accent500,
-        headerRight: ({ tintColor }) => (
-          <IconButton
-            icon={faPlus}
-            size={24}
-            color={tintColor}
-            onPress={() => {
-              navigation.navigate('ManageExpense');
-            }}
-          />
-        ),
-      })}
+        contentStyle: { backgroundColor: Colors.primary100 },
+      }}
     >
-      <BottomTabs.Screen
-        name="RecentExpenses"
-        component={RecentExpenses}
-        options={{
-          title: 'Recent Expenses',
-          tabBarLabel: 'Recent',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesomeIcon icon={faHourglass} size={size} color={color} />
-          ),
-        }}
-      />
-      <BottomTabs.Screen
-        name="AllExpenses"
-        component={AllExpenses}
-        options={{
-          title: 'All Expenses',
-          tabBarLabel: 'All Expenses',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesomeIcon icon={faCalendar} size={size} color={color} />
-          ),
-        }}
-      />
-    </BottomTabs.Navigator>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+    </Stack.Navigator>
   );
+}
+
+function AuthenticatedStack() {
+  const dispatch = useDispatch();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: Colors.primary500 },
+        headerTintColor: 'white',
+        contentStyle: { backgroundColor: Colors.primary100 },
+      }}
+    >
+      <Stack.Screen name="Welcome" component={WelcomeScreen} options={{
+        headerRight: () => {
+          return <Pressable onPress={() => dispatch(logout())}>
+            <FontAwesomeIcon icon={faRightFromBracket} color='white' size={24} />
+          </Pressable>;
+        }
+      }} />
+    </Stack.Navigator>
+  );
+}
+
+function Navigation() {
+  const isAuthenticated = useSelector((state) =>
+    state.authentication.isAuthenticated)
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <AuthenticatedStack /> : <AuthStack />}
+    </NavigationContainer>
+  );
+}
+
+function Root() {
+  const [isFetching, setIsFetching] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    async function fetchToken() {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+
+        if (storedToken) {
+          dispatch(authenicate(storedToken));
+        }
+      }
+      catch (err) {
+        console.log(err)
+      }
+      setIsFetching(false);
+    }
+    fetchToken();
+  }, [])
+
+  if (isFetching) {
+    return <LoadingOverlay message={''} />
+  }
+
+  return <Navigation />
+
+
 }
 
 export default function App() {
   return (
     <>
-      <ExpensesContextProvider>
-        <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={{
-              headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
-              headerTintColor: 'white',
-            }}
-          >
-            <Stack.Screen
-              name="ExpensesOverview"
-              component={ExpensesOverview}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ManageExpense"
-              component={ManageExpense}
-              options={{
-                presentation: 'modal',
-              }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </ExpensesContextProvider>
+      <Provider store={ReduxStore}>
+        <Root />
+      </Provider>
+
     </>
   );
 }
