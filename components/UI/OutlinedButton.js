@@ -3,11 +3,11 @@ import { Pressable, View, Text, StyleSheet } from "react-native";
 import { Colors } from "../../constants/colors";
 
 
-function IconButton({ icon, onPress, children }) {
+function OutlinedButton({ icon, onPress, children }) {
     return (
         <Pressable style={({ pressed }) => [styles.container, pressed && styles.pressed]} onPress={onPress}>
-            <FontAwesomeIcon icon={icon} />
-            <Text> {children} </Text>
+            <FontAwesomeIcon icon={icon} color={Colors.primary500} />
+            <Text style={{ color: Colors.primary500 }}> {children} </Text>
         </Pressable>
     )
 }
@@ -15,12 +15,15 @@ function IconButton({ icon, onPress, children }) {
 
 const styles = StyleSheet.create({
     container: {
-        width: '100%',
-        backgroundColor: Colors.primary500,
+        backgroundColor: Colors.gray700,
         flexDirection: 'row',
         justifyContent: 'center',
-        padding: 6,
-        borderRadius: 6
+        justifyContent: 'center',
+        padding: 9,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: Colors.primary500
+
 
     },
     pressed: {
@@ -29,4 +32,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default IconButton;
+export default OutlinedButton;
